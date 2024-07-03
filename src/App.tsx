@@ -101,15 +101,13 @@ function createRouteComponentsFromDataset(dataset: Board[]) {
     });
   }
 
-  dataset
-    .filter((board) => board.parents.length === 0)
-    .forEach((board) => createRouteFor(board));
+  dataset.forEach((board) => createRouteFor(board));
 
   console.log(routes.map((r) => ({ boardName: r.key, path: r.props.path })));
   return routes;
 }
 
-function Navigation(props: { board: Board; currentPath: string }) {
+function Navigation(props: Readonly<{ board: Board; currentPath: string }>) {
   const { board, currentPath } = props;
 
   const breadcrumbs = currentPath.split("/");
@@ -163,28 +161,13 @@ function App() {
               <h1>Home</h1>
               <h2>Boards</h2>
               <List>
-                {routeComponents
-                  .sort(
-                    (a, b) =>
-                      Number(a.key?.replace("board", "")) -
-                      Number(b.key?.replace("board", ""))
-                  )
-                  .map(({ key, props }) => (
-                    <div>
-                      <Link
-                        style={{ display: "inline-block" }}
-                        href={props.path}
-                      >
-                        <Typography>{key}</Typography>
-                      </Link>{" "}
-                      <Typography
-                        component="span"
-                        style={{ fontSize: "0.85rem" }}
-                      >
-                        (path: {props.path})
-                      </Typography>
-                    </div>
-                  ))}
+                {dataset.map(({ key }) => (
+                  <div key={key}>
+                    <Link style={{ display: "inline-block" }} href={`/${key}`}>
+                      <Typography>{key}</Typography>
+                    </Link>{" "}
+                  </div>
+                ))}
               </List>
             </>
           }
