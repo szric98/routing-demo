@@ -80,6 +80,7 @@ function createRouteComponentsFromDataset(dataset: Board[]) {
   function createRouteFor(board: Board, parentPath = "") {
     const currentPath = `${parentPath}/${board.key}`;
 
+    // check if route already exists
     if (routes.some((r) => r.props.path === currentPath)) return;
 
     routes.push(
@@ -90,7 +91,6 @@ function createRouteComponentsFromDataset(dataset: Board[]) {
       />
     );
 
-    // Recursively create routes for children
     board.children.forEach((childKey) => {
       const childBoard = findBoardByKey(childKey);
       if (childBoard) {
@@ -148,6 +148,14 @@ function Navigation(props: Readonly<{ board: Board; currentPath: string }>) {
   );
 }
 
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+
 function App() {
   const routeComponents = createRouteComponentsFromDataset(dataset);
 
@@ -169,6 +177,40 @@ function App() {
                   </div>
                 ))}
               </List>
+
+              <h2>Dataset</h2>
+              <TableContainer sx={{ maxWidth: "900px" }} component={Paper}>
+                <Table aria-label="simple table">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell sx={{ fontWeight: "bold" }}>
+                        Board key
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: "bold" }}>
+                        Board name
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: "bold" }}>
+                        Children
+                      </TableCell>
+                      <TableCell sx={{ fontWeight: "bold" }}>Parents</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {dataset.map((b) => (
+                      <TableRow key={b.key}>
+                        <TableCell component="th" scope="row">
+                          {b.key}
+                        </TableCell>
+                        <TableCell component="th" scope="row">
+                          {b.name}
+                        </TableCell>
+                        <TableCell>{b.children.join(", ") || "-"}</TableCell>
+                        <TableCell>{b.parents.join(", ") || "-"}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
             </>
           }
         ></Route>
