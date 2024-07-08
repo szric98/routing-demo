@@ -1,5 +1,12 @@
 import { Breadcrumbs, Link, List, Typography } from "@mui/material";
-import { Route, Routes, BrowserRouter } from "react-router-dom";
+import { Route, Routes, BrowserRouter, useParams } from "react-router-dom";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
 
 type Board = {
   name: string;
@@ -71,74 +78,59 @@ const dataset: Board[] = [
   },
 ];
 
-function createRouteComponentsFromDataset(dataset: Board[]) {
-  const findBoardByKey = (key: string) =>
-    dataset.find((board) => board.key === key);
+const findBoardByKey = (key: string) =>
+  dataset.find((board) => board.key === key);
 
-  const routes: JSX.Element[] = [];
-
-  function createRouteFor(board: Board, parentPath = "") {
-    const currentPath = `${parentPath}/${board.key}`;
-
-    // check if route already exists
-    if (routes.some((r) => r.props.path === currentPath)) return;
-
-    routes.push(
-      <Route
-        key={board.key}
-        path={currentPath}
-        element={<Navigation board={board} currentPath={currentPath} />}
-      />
-    );
-
-    board.children.forEach((childKey) => {
-      const childBoard = findBoardByKey(childKey);
-      if (childBoard) {
-        childBoard.parents.forEach((parentKey) => {
-          createRouteFor(childBoard, `${parentPath}/${parentKey}`);
-        });
-      }
-    });
-  }
-
-  dataset.forEach((board) => createRouteFor(board));
-
-  console.log(routes.map((r) => ({ boardName: r.key, path: r.props.path })));
-  return routes;
+function Page404() {
+  return <h1>404 Not Found</h1>;
 }
 
-function Navigation(props: Readonly<{ board: Board; currentPath: string }>) {
-  const { board, currentPath } = props;
+function Navigation() {
+  const { path } = useParams();
 
-  const breadcrumbs = currentPath.split("/");
+  if (!path) {
+    return <Page404 />;
+  }
+
+  const breadcrumbs = path.split("--");
+  const currentboardId = [...breadcrumbs].pop();
+  const currentBoard = currentboardId && findBoardByKey(currentboardId);
+
+  if (!currentBoard) {
+    return <Page404 />;
+  }
 
   return (
     <>
       <Breadcrumbs aria-label="breadcrumb">
+        <Link href="/">home</Link>
         {(() => {
           let path = "/";
 
           return breadcrumbs.map((breadcrumb, index) => {
-            if (index > 0) {
-              path += `${breadcrumb}/`;
+            if (path !== "/") {
+              path += "--";
+            }
+
+            if (index !== breadcrumb.length - 1) {
+              path += `${breadcrumb}`;
             }
 
             return (
-              <Link key={breadcrumb} href={path}>
-                {breadcrumb || "home"}
+              <Link key={breadcrumb} href={"/data" + path}>
+                {breadcrumb}
               </Link>
             );
           });
         })()}
       </Breadcrumbs>
-
       <Typography>
-        Board's children: {board.children.length === 0 && "-"}
+        Board's children: {currentBoard.children.length === 0 && "-"}
       </Typography>
-      {board.children.length > 0 && (
+      {currentBoard.children.length > 0 && (
         <List>
-          {board.children.map((c) => (
-            <Link key={c} href={currentPath + `/${c}`}>
+          {currentBoard.children.map((c) => (
+            <Link key={c} href={path + `--${c}`}>
               <Typography>{c}</Typography>
             </Link>
           ))}
@@ -147,18 +139,7 @@ function Navigation(props: Readonly<{ board: Board; currentPath: string }>) {
     </>
   );
 }
-
-import Table from "@mui/material/Table";
-import TableBody from "@mui/material/TableBody";
-import TableCell from "@mui/material/TableCell";
-import TableContainer from "@mui/material/TableContainer";
-import TableHead from "@mui/material/TableHead";
-import TableRow from "@mui/material/TableRow";
-import Paper from "@mui/material/Paper";
-
-function App() {
-  const routeComponents = createRouteComponentsFromDataset(dataset);
-
+function Wrapper() {
   return (
     <BrowserRouter>
       <Routes>
@@ -171,7 +152,10 @@ function App() {
               <List>
                 {dataset.map(({ key }) => (
                   <div key={key}>
-                    <Link style={{ display: "inline-block" }} href={`/${key}`}>
+                    <Link
+                      style={{ display: "inline-block" }}
+                      href={`/data/${key}`}
+                    >
                       <Typography>{key}</Typography>
                     </Link>{" "}
                   </div>
@@ -214,11 +198,15 @@ function App() {
             </>
           }
         ></Route>
-        {routeComponents}
-        <Route path="*" element={<h1>Not Found</h1>}></Route>
+        <Route path="/data/:path" element={<Navigation />}></Route>
+        <Route path="*" element={<Page404 />}></Route>
       </Routes>
     </BrowserRouter>
   );
+}
+
+function App() {
+  return <Wrapper />;
 }
 
 export default App;
