@@ -96,6 +96,8 @@ function Navigation() {
   const currentboardId = [...breadcrumbs].pop();
   const currentBoard = currentboardId && findBoardByKey(currentboardId);
 
+  // TODO add check for parents to double check the tree
+
   if (!currentBoard) {
     return <Page404 />;
   }
